@@ -5,7 +5,101 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
+    let content;
+    window.onload = () => {
+      content = document.querySelector('#content');
 
+      const methodSelect = document.querySelector('#methodSelect');
+
+      document.querySelector('#nameForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendPost(e.target);
+        return false;
+      });
+
+      const urlSelect = document.querySelector('#urlField');
+      document.querySelector('#userForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendFetchRequest(urlSelect.value, methodSelect.value);
+        return false;
+      });
+    };
+
+    const sendPost = async (nameForm) => {
+      const name = nameForm.querySelector('#nameField').value;
+      const age = nameForm.querySelector('#ageField').value;
+
+      const formData = `name=${name}&age=${age}`;
+
+      const response = await fetch('/addUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-ww-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: formData,
+      });
+
+      handleResponse(response, true);
+    };
+
+    const sendFetchRequest = async (url, method) => {
+      const options = {
+        method: method,
+        headers: {
+          Accept: 'application/json',
+        },
+      };
+
+      let response = await fetch(url, options);
+
+      handleResponse(response, method === 'get');
+    };
+
+    const handleResponse = async (response, parseResponse) => {
+      const content = document.querySelector('#content');
+      
+      switch(response.status){
+        case 200:
+          content.innerHTML = `<b>success</b>`;
+          break;
+
+        case 201:
+          content.innerHTML = `<b>created</b>`;
+          break;
+
+        case 204:
+          content.innerHTML = `<b>updated no content</b>`;
+          break;
+
+        case 400:
+          content.innerHTML = `<b>bad request</b>`;
+          break;
+
+        case 404:
+          content.innerHTML = `<b>not found</b>`;
+          break;
+
+        default:
+          content.innerHTML = `<b>response code not implemented by client</b>`;
+          break;
+      }
+
+      if(parseResponse) {
+        const resText = await response.text();
+        const parsedJson = JSON.parse(resText);
+
+        console.log(parsedJson);
+
+        if(parsedJson.message) {
+          content.innerHTML += `<p>message: ${parsedJson.message}</p>`;
+        }
+
+        if(parsedJson.users) {
+          content.innerHTML += `<p>${JSON.stringify(parsedJson.users)}</p>`;
+        }
+      }
+    };
   </script>
 </head>
 <body>
